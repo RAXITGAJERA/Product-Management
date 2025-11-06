@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ category.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">{{ category.name }}</h1>
+    {% if is_admin %}
+    <div>
+        <a href="{% url 'category_update' category.pk %}" class="btn btn-warning">
+            <i class="fas fa-edit"></i> Edit
+        </a>
+        <a href="{% url 'category_delete' category.pk %}" class="btn btn-danger">
+            <i class="fas fa-trash"></i> Delete
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Category Details</h5>
+                <table class="table">
+                    <tr>
+                        <th width="200">Name:</th>
+                        <td>{{ category.name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Description:</th>
+                        <td>{{ category.description|default:"No description" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Status:</th>
+                        <td>
+                            {% if category.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Created On:</th>
+                        <td>{{ category.created_on|date:"F d, Y h:i A" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Created By:</th>
+                        <td>{{ category.created_by.username }}</td>
+                    </tr>
+                </table>
+                
+                <a href="{% url 'category_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to List
+                </a>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-body">
+                <h5 class="card-title">Subcategories</h5>
+                <ul class="list-group">
+                    {% for subcategory in category.subcategories.all %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ subcategory.name }}
+                        <a href="{% url 'subcategory_detail' subcategory.pk %}" class="btn btn-sm btn-info">View</a>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item">No subcategories found.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

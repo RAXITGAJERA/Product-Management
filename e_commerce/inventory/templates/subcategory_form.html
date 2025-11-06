@@ -1,0 +1,138 @@
+<!-- templates/subcategory_form.html -->
+{% extends 'base.html' %}
+
+{% block title %}{% if form.instance.pk %}Edit Subcategory{% else %}Add Subcategory{% endif %}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        {% if form.instance.pk %}
+            <i class="fas fa-edit"></i> Edit Subcategory
+        {% else %}
+            <i class="fas fa-plus"></i> Add New Subcategory
+        {% endif %}
+    </h1>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    {% if form.errors %}
+                    <div class="alert alert-danger">
+                        <strong>Please correct the following errors:</strong>
+                        <ul class="mb-0">
+                            {% for field in form %}
+                                {% for error in field.errors %}
+                                    <li>{{ field.label }}: {{ error }}</li>
+                                {% endfor %}
+                            {% endfor %}
+                            {% for error in form.non_field_errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.category.id_for_label }}" class="form-label">
+                            Parent Category <span class="text-danger">*</span>
+                        </label>
+                        {{ form.category }}
+                        {% if form.category.help_text %}
+                        <div class="form-text">{{ form.category.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.name.id_for_label }}" class="form-label">
+                            Subcategory Name <span class="text-danger">*</span>
+                        </label>
+                        {{ form.name }}
+                        {% if form.name.help_text %}
+                        <div class="form-text">{{ form.name.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">
+                            Description
+                        </label>
+                        {{ form.description }}
+                        {% if form.description.help_text %}
+                        <div class="form-text">{{ form.description.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> 
+                            {% if form.instance.pk %}Update{% else %}Create{% endif %} Subcategory
+                        </button>
+                        <a href="{% if form.instance.pk %}{% url 'subcategory_detail' form.instance.pk %}{% else %}{% url 'subcategory_list' %}{% endif %}" 
+                           class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-info-circle"></i> Form Help
+                </h5>
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <strong>Parent Category:</strong> Select the category this subcategory belongs to
+                    </li>
+                    <li class="mb-2">
+                        <strong>Name:</strong> Enter a unique, descriptive name for the subcategory
+                    </li>
+                    <li class="mb-2">
+                        <strong>Description:</strong> Provide additional details about this subcategory (optional)
+                    </li>
+                </ul>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-lightbulb"></i>
+                    <strong>Tip:</strong> Subcategories help organize products within a category. For example, under "Electronics", you might have "Laptops", "Phones", etc.
+                </div>
+            </div>
+        </div>
+        
+        {% if form.instance.pk %}
+        <div class="card mt-3">
+            <div class="card-body">
+                <h5 class="card-title">Current Subcategory Info</h5>
+                <p><strong>Parent Category:</strong> {{ form.instance.category.name }}</p>
+                <p><strong>Created:</strong> {{ form.instance.created_at|date:"M d, Y" }}</p>
+                <p><strong>Products:</strong> {{ form.instance.product_set.count }}</p>
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="card mt-3">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-folder-tree"></i> Category Structure
+                </h5>
+                <div class="text-muted small">
+                    <p>Your inventory is organized as:</p>
+                    <ul>
+                        <li>Category (e.g., Electronics)</li>
+                        <li style="margin-left: 20px;">→ Subcategory (e.g., Laptops)</li>
+                        <li style="margin-left: 40px;">→ Products (e.g., Dell XPS 13)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ subcategory.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-folder-open text-info"></i> {{ subcategory.name }}
+    </h1>
+    {% if can_edit %}
+    <div>
+        <a href="{% url 'subcategory_update' subcategory.pk %}" class="btn btn-warning">
+            <i class="fas fa-edit"></i> Edit
+        </a>
+        <a href="{% url 'subcategory_delete' subcategory.pk %}" class="btn btn-danger">
+            <i class="fas fa-trash"></i> Delete
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Subcategory Details</h5>
+                <table class="table">
+                    <tr>
+                        <th width="200">Name:</th>
+                        <td>{{ subcategory.name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Parent Category:</th>
+                        <td>
+                            <a href="{% url 'category_detail' subcategory.category.pk %}">
+                                <i class="fas fa-folder text-warning"></i> {{ subcategory.category.name }}
+                            </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Description:</th>
+                        <td>{{ subcategory.description|default:"No description" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Created At:</th>
+                        <td>{{ subcategory.created_at|date:"F d, Y h:i A" }}</td>
+                    </tr>
+                </table>
+                
+                <div class="d-flex gap-2">
+                    <a href="{% url 'subcategory_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to List
+                    </a>
+                    <a href="{% url 'category_detail' subcategory.category.pk %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-folder"></i> View Parent Category
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Products Section -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-box"></i> Products in this Subcategory
+                </h5>
+                {% if can_add %}
+                <a href="{% url 'product_create' %}?subcategory={{ subcategory.pk }}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-plus"></i> Add Product
+                </a>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if products %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Product Name</th>
+                                <th>Price</th>
+                                <th>Stock</th>
+                                <th>Created By</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in products %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>
+                                    <a href="{% url 'product_detail' product.pk %}">
+                                        <i class="fas fa-box text-primary"></i> {{ product.name }}
+                                    </a>
+                                </td>
+                                <td class="text-success fw-bold">${{ product.price }}</td>
+                                <td>
+                                    {% if product.stock > 10 %}
+                                        <span class="badge bg-success">{{ product.stock }}</span>
+                                    {% elif product.stock > 0 %}
+                                        <span class="badge bg-warning">{{ product.stock }}</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Out of Stock</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ product.created_by.username }}</td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'product_detail' product.pk %}" 
+                                           class="btn btn-outline-primary" 
+                                           title="View">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if can_edit %}
+                                        <a href="{% url 'product_update' product.pk %}" 
+                                           class="btn btn-outline-warning" 
+                                           title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No products in this subcategory yet.</p>
+                    {% if can_add %}
+                    <a href="{% url 'product_create' %}?subcategory={{ subcategory.pk }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add First Product
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-chart-bar"></i> Statistics
+                </h5>
+                <div class="mb-3">
+                    <small class="text-muted">Total Products</small>
+                    <h3>{{ products.count }}</h3>
+                </div>
+                <div class="mb-3">
+                    <small class="text-muted">Total Stock Value</small>
+                    <h3 class="text-success">${{ total_value|floatformat:2 }}</h3>
+                </div>
+                <div class="mb-3">
+                    <small class="text-muted">Average Price</small>
+                    <h3 class="text-info">${{ average_price|floatformat:2 }}</h3>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-info-circle"></i> Category Path
+                </h5>
+                <div class="d-flex flex-column gap-2">
+                    <a href="{% url 'category_detail' subcategory.category.pk %}" class="btn btn-outline-warning btn-sm">
+                        <i class="fas fa-folder"></i> {{ subcategory.category.name }}
+                    </a>
+                    <div class="text-center">
+                        <i class="fas fa-arrow-down text-muted"></i>
+                    </div>
+                    <button class="btn btn-info btn-sm" disabled>
+                        <i class="fas fa-folder-open"></i> {{ subcategory.name }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

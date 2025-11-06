@@ -1,0 +1,428 @@
+{% extends 'base.html' %}
+
+{% block title %}Products{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-box"></i> Products
+    </h1>
+    {% if can_add %}
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'product_create' %}" class="btn btn-sm btn-primary">
+            <i class="fas fa-plus"></i> Add Product
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+{% endif %}
+
+<!-- Filter and Search Section -->
+<div class="row mb-3">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Category</label>
+                        <select name="category" class="form-select" id="categoryFilter">
+                            <option value="">All Categories</option>
+                            {% for cat in all_categories %}
+                            <option value="{{ cat.id }}" {% if request.GET.category == cat.id|stringformat:"s" %}selected{% endif %}>
+                                {{ cat.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label class="form-label">Subcategory</label>
+                        <select name="subcategory" class="form-select" id="subcategoryFilter">
+                            <option value="">All Subcategories</option>
+                            {% for subcat in all_subcategories %}
+                            <option value="{{ subcat.id }}" 
+                                    data-category="{{ subcat.category.id }}"
+                                    {% if request.GET.subcategory == subcat.id|stringformat:"s" %}selected{% endif %}>
+                                {{ subcat.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label class="form-label">Sort By</label>
+                        <select name="sort" class="form-select">
+                            <option value="-created_at" {% if request.GET.sort == '-created_at' or not request.GET.sort %}selected{% endif %}>Newest First</option>
+                            <option value="created_at" {% if request.GET.sort == 'created_at' %}selected{% endif %}>Oldest First</option>
+                            <option value="name" {% if request.GET.sort == 'name' %}selected{% endif %}>Name (A-Z)</option>
+                            <option value="-name" {% if request.GET.sort == '-name' %}selected{% endif %}>Name (Z-A)</option>
+                            <option value="price" {% if request.GET.sort == 'price' %}selected{% endif %}>Price (Low to High)</option>
+                            <option value="-price" {% if request.GET.sort == '-price' %}selected{% endif %}>Price (High to Low)</option>
+                            <option value="stock" {% if request.GET.sort == 'stock' %}selected{% endif %}>Stock (Low to High)</option>
+                            <option value="-stock" {% if request.GET.sort == '-stock' %}selected{% endif %}>Stock (High to Low)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-filter"></i> Apply Filters
+                        </button>
+                    </div>
+                    
+                    <div class="col-md-12">
+                        <input type="text" name="search" class="form-control" 
+                               placeholder="Search products by name or description..." 
+                               value="{{ request.GET.search }}">
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-3">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-0">Total Products</h6>
+                        <h2 class="mb-0">{{ total_products }}</h2>
+                    </div>
+                    <div>
+                        <i class="fas fa-box fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-0">Low Stock</h6>
+                        <h2 class="mb-0">{{ low_stock_count }}</h2>
+                    </div>
+                    <div>
+                        <i class="fas fa-exclamation-triangle fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card text-white bg-danger">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-0">Out of Stock</h6>
+                        <h2 class="mb-0">{{ out_of_stock_count }}</h2>
+                    </div>
+                    <div>
+                        <i class="fas fa-times-circle fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-0">In Stock</h6>
+                        <h2 class="mb-0">{{ total_products|add:"-"|add:out_of_stock_count }}</h2>
+                    </div>
+                    <div>
+                        <i class="fas fa-check-circle fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Products Grid/List -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Product Catalog</h5>
+                <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn btn-outline-secondary active" id="gridViewBtn">
+                        <i class="fas fa-th"></i> Grid
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" id="listViewBtn">
+                        <i class="fas fa-list"></i> List
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if products %}
+                
+                <!-- Grid View -->
+                <div id="gridView" class="row">
+                    {% for product in products %}
+                    <div class="col-md-4 col-lg-3 mb-4">
+                        <div class="card h-100 product-card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h5 class="card-title mb-0">
+                                        <a href="{% url 'product_detail' product.pk %}" class="text-decoration-none">
+                                            {{ product.name|truncatewords:4 }}
+                                        </a>
+                                    </h5>
+                                    {% if product.stock > 10 %}
+                                        <span class="badge bg-success">In Stock</span>
+                                    {% elif product.stock > 0 %}
+                                        <span class="badge bg-warning">Low Stock</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Out</span>
+                                    {% endif %}
+                                </div>
+                                
+                                <p class="text-muted small mb-2">
+                                    <i class="fas fa-folder text-warning"></i> {{ product.category.name }}<br>
+                                    <i class="fas fa-folder-open text-info"></i> {{ product.subcategory.name }}
+                                </p>
+                                
+                                <p class="card-text text-truncate" title="{{ product.description }}">
+                                    {{ product.description|default:"No description"|truncatewords:10 }}
+                                </p>
+                                
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h4 class="text-success mb-0">${{ product.price }}</h4>
+                                    <span class="text-muted">Stock: {{ product.stock }}</span>
+                                </div>
+                                
+                                <div class="d-flex gap-1">
+                                    <a href="{% url 'product_detail' product.pk %}" class="btn btn-sm btn-outline-primary flex-fill">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                    {% if can_edit %}
+                                    <a href="{% url 'product_update' product.pk %}" class="btn btn-sm btn-outline-warning">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'product_delete' product.pk %}" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                                
+                                <small class="text-muted d-block mt-2">
+                                    <i class="fas fa-user"></i> {{ product.created_by.username }}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- List View (Hidden by default) -->
+                <div id="listView" class="d-none">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th width="5%">#</th>
+                                    <th width="25%">Product Name</th>
+                                    <th width="15%">Category</th>
+                                    <th width="15%">Subcategory</th>
+                                    <th width="10%">Price</th>
+                                    <th width="10%">Stock</th>
+                                    <th width="10%">Created By</th>
+                                    <th width="10%" class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for product in products %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>
+                                        <a href="{% url 'product_detail' product.pk %}" class="text-decoration-none fw-bold">
+                                            <i class="fas fa-box text-primary"></i> {{ product.name }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'category_detail' product.category.pk %}" class="text-decoration-none">
+                                            {{ product.category.name }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'subcategory_detail' product.subcategory.pk %}" class="text-decoration-none">
+                                            {{ product.subcategory.name }}
+                                        </a>
+                                    </td>
+                                    <td class="text-success fw-bold">${{ product.price }}</td>
+                                    <td>
+                                        {% if product.stock > 10 %}
+                                            <span class="badge bg-success">{{ product.stock }}</span>
+                                        {% elif product.stock > 0 %}
+                                            <span class="badge bg-warning">{{ product.stock }}</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Out of Stock</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ product.created_by.username }}</td>
+                                    <td class="text-end">
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{% url 'product_detail' product.pk %}" 
+                                               class="btn btn-outline-primary" 
+                                               title="View">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            {% if can_edit %}
+                                            <a href="{% url 'product_update' product.pk %}" 
+                                               class="btn btn-outline-warning" 
+                                               title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{% url 'product_delete' product.pk %}" 
+                                               class="btn btn-outline-danger" 
+                                               title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                {% if is_paginated %}
+                <nav class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.subcategory %}&subcategory={{ request.GET.subcategory }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">
+                                First
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.subcategory %}&subcategory={{ request.GET.subcategory }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">
+                                Previous
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.subcategory %}&subcategory={{ request.GET.subcategory }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">
+                                    {{ num }}
+                                </a>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.subcategory %}&subcategory={{ request.GET.subcategory }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">
+                                Next
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.subcategory %}&subcategory={{ request.GET.subcategory }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">
+                                Last
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+                
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">
+                        {% if request.GET.search or request.GET.category or request.GET.subcategory %}
+                            No products found matching your criteria.
+                        {% else %}
+                            No products available yet.
+                        {% endif %}
+                    </p>
+                    {% if can_add %}
+                    <a href="{% url 'product_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add First Product
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .product-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .opacity-50 {
+        opacity: 0.5;
+    }
+</style>
+
+<script>
+    // Grid/List view toggle
+    document.getElementById('gridViewBtn').addEventListener('click', function() {
+        document.getElementById('gridView').classList.remove('d-none');
+        document.getElementById('listView').classList.add('d-none');
+        this.classList.add('active');
+        document.getElementById('listViewBtn').classList.remove('active');
+    });
+    
+    document.getElementById('listViewBtn').addEventListener('click', function() {
+        document.getElementById('listView').classList.remove('d-none');
+        document.getElementById('gridView').classList.add('d-none');
+        this.classList.add('active');
+        document.getElementById('gridViewBtn').classList.remove('active');
+    });
+    
+    // Filter subcategories based on selected category
+    const categoryFilter = document.getElementById('categoryFilter');
+    const subcategoryFilter = document.getElementById('subcategoryFilter');
+    
+    if (categoryFilter && subcategoryFilter) {
+        const allSubcategoryOptions = Array.from(subcategoryFilter.options);
+        
+        categoryFilter.addEventListener('change', function() {
+            const selectedCategory = this.value;
+            
+            // Clear and reset subcategory options
+            subcategoryFilter.innerHTML = '<option value="">All Subcategories</option>';
+            
+            // Add filtered subcategories
+            allSubcategoryOptions.forEach(option => {
+                if (option.value === '' || !selectedCategory || option.dataset.category === selectedCategory) {
+                    subcategoryFilter.add(option.cloneNode(true));
+                }
+            });
+        });
+    }
+</script>
+{% endblock %}

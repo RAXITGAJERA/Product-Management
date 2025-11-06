@@ -1,0 +1,5 @@
+Test users
+
+admin@admin.com = admin
+seller@test.com = seller
+customer@test.com = customer

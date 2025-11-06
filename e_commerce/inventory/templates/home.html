@@ -1,0 +1,265 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Home - Inventory Management{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Hero Section -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card bg-primary text-white shadow-lg border-0">
+                <div class="card-body p-5">
+                    <h1 class="display-4 fw-bold mb-3">
+                        {% if request.user.is_authenticated %}
+                            Welcome back, {{ request.user.first_name|default:request.user.username }}!
+                        {% else %}
+                            Welcome to Inventory Management System
+                        {% endif %}
+                    </h1>
+                    <p class="lead mb-4">
+                        {% if request.user.is_authenticated %}
+                            {% if user_role == 'admin' %}
+                                You have full administrative access to the system.
+                            {% elif user_role == 'seller' %}
+                                Manage your inventory efficiently with our powerful tools.
+                            {% else %}
+                                Browse our complete product catalog and inventory.
+                            {% endif %}
+                        {% else %}
+                            Streamline your inventory management with our comprehensive solution.
+                        {% endif %}
+                    </p>
+                    
+                    {% if not request.user.is_authenticated %}
+                        <div class="d-flex gap-3">
+                            <a href="{% url 'login' %}" class="btn btn-light btn-lg">
+                                <i class="bi bi-box-arrow-in-right"></i> Login
+                            </a>
+                            <a href="{% url 'register' %}" class="btn btn-outline-light btn-lg">
+                                <i class="bi bi-person-plus"></i> Register
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center p-4">
+                    <div class="rounded-circle bg-primary bg-opacity-10 d-inline-flex align-items-center justify-content-center mb-3" 
+                         style="width: 60px; height: 60px;">
+                        <i class="bi bi-box-seam fs-3 text-primary"></i>
+                    </div>
+                    <h3 class="fw-bold mb-2">{{ total_products }}</h3>
+                    <p class="text-muted mb-0">Total Products</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center p-4">
+                    <div class="rounded-circle bg-success bg-opacity-10 d-inline-flex align-items-center justify-content-center mb-3" 
+                         style="width: 60px; height: 60px;">
+                        <i class="bi bi-folder fs-3 text-success"></i>
+                    </div>
+                    <h3 class="fw-bold mb-2">{{ total_categories }}</h3>
+                    <p class="text-muted mb-0">Categories</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center p-4">
+                    <div class="rounded-circle bg-info bg-opacity-10 d-inline-flex align-items-center justify-content-center mb-3" 
+                         style="width: 60px; height: 60px;">
+                        <i class="bi bi-folders fs-3 text-info"></i>
+                    </div>
+                    <h3 class="fw-bold mb-2">{{ total_subcategories }}</h3>
+                    <p class="text-muted mb-0">Subcategories</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center p-4">
+                    <div class="rounded-circle bg-warning bg-opacity-10 d-inline-flex align-items-center justify-content-center mb-3" 
+                         style="width: 60px; height: 60px;">
+                        <i class="bi bi-exclamation-triangle fs-3 text-warning"></i>
+                    </div>
+                    <h3 class="fw-bold mb-2">{{ low_stock_products }}</h3>
+                    <p class="text-muted mb-0">Low Stock Items</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Products Section (only for authenticated users) -->
+    {% if request.user.is_authenticated and recent_products %}
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold mb-0">Recent Products</h2>
+                <a href="{% url 'product_list' %}" class="btn btn-outline-primary">
+                    View All Products <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+
+            <div class="row g-4">
+                {% for product in recent_products %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card border-0 shadow-sm h-100 hover-card">
+                        {% if product.image %}
+                            <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
+                        {% else %}
+                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <i class="bi bi-image fs-1 text-muted"></i>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="card-body">
+                            <h5 class="card-title fw-bold">{{ product.name }}</h5>
+                            <p class="card-text text-muted small">
+                                {{ product.description|truncatewords:15 }}
+                            </p>
+                            
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="badge bg-primary">{{ product.category.name }}</span>
+                                <span class="fw-bold text-primary">${{ product.price }}</span>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    Stock: 
+                                    <span class="{% if product.stock <= 10 %}text-danger{% else %}text-success{% endif %} fw-bold">
+                                        {{ product.stock }}
+                                    </span>
+                                </small>
+                                <a href="{% url 'product_detail' product.pk %}" class="btn btn-sm btn-outline-primary">
+                                    View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Quick Actions (for Admin and seller) -->
+    {% if request.user.is_authenticated %}
+        {% if user_role == 'admin' or user_role == 'seller' %}
+        <div class="row mb-5">
+            <div class="col-12">
+                <h2 class="fw-bold mb-4">Quick Actions</h2>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <a href="{% url 'product_create' %}" class="text-decoration-none">
+                            <div class="card border-0 shadow-sm hover-card">
+                                <div class="card-body p-4 text-center">
+                                    <i class="bi bi-plus-circle fs-1 text-primary mb-3"></i>
+                                    <h5 class="fw-bold">Add New Product</h5>
+                                    <p class="text-muted small mb-0">Create a new product entry</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+
+                    <div class="col-md-4">
+                        <a href="{% url 'category_create' %}" class="text-decoration-none">
+                            <div class="card border-0 shadow-sm hover-card">
+                                <div class="card-body p-4 text-center">
+                                    <i class="bi bi-folder-plus fs-1 text-success mb-3"></i>
+                                    <h5 class="fw-bold">Add Category</h5>
+                                    <p class="text-muted small mb-0">Create a new category</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+
+                    <div class="col-md-4">
+                        <a href="{% url 'subcategory_create' %}" class="text-decoration-none">
+                            <div class="card border-0 shadow-sm hover-card">
+                                <div class="card-body p-4 text-center">
+                                    <i class="bi bi-collection fs-1 text-info mb-3"></i>
+                                    <h5 class="fw-bold">Add Subcategory</h5>
+                                    <p class="text-muted small mb-0">Create a new subcategory</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    {% endif %}
+
+    <!-- Features Section (for non-authenticated users) -->
+    {% if not request.user.is_authenticated %}
+    <div class="row mb-5">
+        <div class="col-12">
+            <h2 class="fw-bold text-center mb-5">Why Choose Our System?</h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body p-4 text-center">
+                            <i class="bi bi-shield-check fs-1 text-primary mb-3"></i>
+                            <h5 class="fw-bold mb-3">Secure & Reliable</h5>
+                            <p class="text-muted">Role-based access control ensures your data is protected with industry-standard security.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body p-4 text-center">
+                            <i class="bi bi-speedometer2 fs-1 text-success mb-3"></i>
+                            <h5 class="fw-bold mb-3">Fast & Efficient</h5>
+                            <p class="text-muted">Streamlined workflows help you manage inventory quickly and effectively.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body p-4 text-center">
+                            <i class="bi bi-graph-up fs-1 text-info mb-3"></i>
+                            <h5 class="fw-bold mb-3">Real-time Updates</h5>
+                            <p class="text-muted">Track inventory levels and get instant alerts for low stock items.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .hover-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+    
+    .card {
+        border-radius: 12px;
+    }
+    
+    .bg-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    }
+</style>
+{% endblock %}

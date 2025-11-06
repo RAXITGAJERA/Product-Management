@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ product.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">{{ product.name }}</h1>
+    {% if can_edit %}
+    <div>
+        <a href="{% url 'product_update' product.pk %}" class="btn btn-warning">
+            <i class="fas fa-edit"></i> Edit
+        </a>
+        <a href="{% url 'product_delete' product.pk %}" class="btn btn-danger">
+            <i class="fas fa-trash"></i> Delete
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Product Details</h5>
+                <table class="table">
+                    <tr>
+                        <th width="200">Name:</th>
+                        <td>{{ product.name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Category:</th>
+                        <td>
+                            <a href="{% url 'category_detail' product.category.pk %}">
+                                {{ product.category.name }}
+                            </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Subcategory:</th>
+                        <td>
+                            <a href="{% url 'subcategory_detail' product.subcategory.pk %}">
+                                {{ product.subcategory.name }}
+                            </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Description:</th>
+                        <td>{{ product.description|default:"No description" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Price:</th>
+                        <td class="h4 text-success">${{ product.price }}</td>
+                    </tr>
+                    <tr>
+                        <th>Stock:</th>
+                        <td>
+                            {% if product.stock > 10 %}
+                                <span class="badge bg-success">{{ product.stock }} items</span>
+                            {% elif product.stock > 0 %}
+                                <span class="badge bg-warning">{{ product.stock }} items (Low Stock)</span>
+                            {% else %}
+                                <span class="badge bg-danger">Out of Stock</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Created At:</th>
+                        <td>{{ product.created_at|date:"F d, Y h:i A" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Created By:</th>
+                        <td>
+                            {{ product.created_by.username }}
+                            {% if product.created_by == user %}
+                                <span class="badge bg-info">You</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+                
+                <a href="{% url 'product_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to List
+                </a>
+                
+                {% if user_role == 'customer' %}
+                <button class="btn btn-success" disabled>
+                    <i class="fas fa-shopping-cart"></i> Add to Cart (Coming Soon)
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Product Stats</h5>
+                <div class="mb-3">
+                    <small class="text-muted">Value in Stock</small>
+                    <h3>${{ total_value }}</h3>
+                </div>
+                <div class="mb-3">
+                    <small class="text-muted">Stock Status</small>
+                    <div class="progress" style="height: 25px;">
+                        {% widthratio product.stock 100 100 as stock_percentage %}
+                        <div class="progress-bar {% if product.stock > 50 %}bg-success{% elif product.stock > 20 %}bg-warning{% else %}bg-danger{% endif %}" 
+                             role="progressbar" 
+                             style="width: {% if stock_percentage > 100 %}100{% else %}{{ stock_percentage }}{% endif %}%">
+                            {{ product.stock }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {% if user_role == 'customer' %}
+        <div class="card mt-3">
+            <div class="card-body">
+                <h5 class="card-title">Customer Info</h5>
+                <p class="text-muted">As a customer, you can view all products but cannot make changes.</p>
+                <p>To purchase this item, please contact the seller: <strong>{{ product.created_by.username }}</strong></p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
